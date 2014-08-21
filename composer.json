@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "m8rge\\OCF": ""
+            "m8rge\\OCF\\": ""
         }
     }
 }
