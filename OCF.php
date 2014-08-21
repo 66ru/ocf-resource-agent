@@ -10,30 +10,37 @@ abstract class OCF
      * no error
      */
     const OCF_SUCCESS = 0;
+
     /**
      * generic error
      */
     const OCF_ERR_GENERIC = 1;
+
     /**
-     * Wrong console arguments
+     * wrong console arguments
      */
     const OCF_ERR_ARGS = 2;
+
     /**
      * action not implemented
      */
     const OCF_ERR_UNIMPLEMENTED = 3;
+
     /**
      * permission error
      */
     const OCF_ERR_PERM = 4;
+
     /**
      * required component isn't installed
      */
     const OCF_ERR_INSTALLED = 5;
+
     /**
      * wrong resource configuration
      */
     const OCF_ERR_CONFIGURED = 6;
+
     /**
      * resource not running. May returned by monitor action
      */
