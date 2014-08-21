@@ -6,13 +6,37 @@ use phpDocumentor\Reflection\DocBlock;
 
 abstract class OCF
 {
+    /**
+     * no error
+     */
     const OCF_SUCCESS = 0;
+    /**
+     * generic error
+     */
     const OCF_ERR_GENERIC = 1;
+    /**
+     * Wrong console arguments
+     */
     const OCF_ERR_ARGS = 2;
+    /**
+     * action not implemented
+     */
     const OCF_ERR_UNIMPLEMENTED = 3;
+    /**
+     * permission error
+     */
     const OCF_ERR_PERM = 4;
+    /**
+     * required component isn't installed
+     */
     const OCF_ERR_INSTALLED = 5;
+    /**
+     * wrong resource configuration
+     */
     const OCF_ERR_CONFIGURED = 6;
+    /**
+     * resource not running. May returned by monitor action
+     */
     const OCF_NOT_RUNNING = 7;
 
     // Non-standard values
@@ -210,6 +234,10 @@ abstract class OCF
         );
     }
 
+    /**
+     * @param $string
+     * @return string
+     */
     protected function convertFromCamelCase($string) //todo: extract to helper
     {
         return preg_replace_callback(
@@ -272,17 +300,18 @@ abstract class OCF
         }
     }
 
+    /**
+     * @param string $name
+     * @param string $value
+     * @return int
+     */
     protected function setAttribute($name, $value)
     {
         $command = "attrd_updater -n " . escapeshellarg($name) . ' -v ' . escapeshellarg($value);
+        $exitCode = $this->execWithLogging($command);
         exec($command, $output, $exitCode);
-        if ($exitCode) {
-            $this->ravenClient->extra_context(['command' => $command, 'output' => $output, 'exitCode' => $exitCode]);
-            $this->ravenClient->captureException(new \Exception('attrd_updater exit code non zero'));
-            return self::OCF_ERR_GENERIC;
-        }
 
-        return self::OCF_SUCCESS;
+        return $exitCode ? self::OCF_ERR_GENERIC : self::OCF_SUCCESS;
     }
 
     /**
@@ -292,13 +321,27 @@ abstract class OCF
     protected function removeAttribute($name)
     {
         $command = "attrd_updater -D -n " . escapeshellarg($name);
+        $exitCode = $this->execWithLogging($command);
+        exec($command, $output, $exitCode);
+
+        return $exitCode ? self::OCF_ERR_GENERIC : self::OCF_SUCCESS;
+    }
+
+    /**
+     * @param string $command
+     * @return int
+     */
+    public function execWithLogging($command)
+    {
         exec($command, $output, $exitCode);
         if ($exitCode) {
+            $executable = explode(' ', $command, 2);
+            $executable = reset($executable);
             $this->ravenClient->extra_context(['command' => $command, 'output' => $output, 'exitCode' => $exitCode]);
-            $this->ravenClient->captureException(new \Exception('attrd_updater exit code non zero'));
-            return self::OCF_ERR_GENERIC;
+            $this->ravenClient->captureException(new \Exception("$executable executed with error"));
+            return $exitCode;
         }
 
-        return self::OCF_SUCCESS;
+        return $exitCode;
     }
 }
