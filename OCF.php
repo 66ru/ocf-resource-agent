@@ -6,6 +6,9 @@ use phpDocumentor\Reflection\DocBlock;
 
 abstract class OCF
 {
+    protected $version = '0.1';
+    protected $language = 'en';
+
     /**
      * no error
      */
@@ -46,13 +49,6 @@ abstract class OCF
      */
     const OCF_NOT_RUNNING = 7;
 
-    // Non-standard values
-//    const OCF_RUNNING_MASTER = 8;
-//    const OCF_FAILED_MASTER = 9;
-
-    protected $version = '0.1';
-    protected $language = 'en';
-
     /**
      * Sentry dsn url
      * @var string
@@ -63,6 +59,11 @@ abstract class OCF
      * @var \Raven_Client
      */
     protected $ravenClient;
+
+    /**
+     * @var string[] Required console utilities
+     */
+    protected $requiredUtilities = [];
 
     public function initProperties()
     {
@@ -90,8 +91,18 @@ abstract class OCF
         return true;
     }
 
+    /**
+     * @return bool
+     */
     public function validateRequirements()
     {
+        foreach ($this->requiredUtilities as $command) {
+            exec($command, $output, $exitCode);
+            if ($exitCode == 127) {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -113,11 +124,11 @@ abstract class OCF
     public function run($method)
     {
         $this->initProperties();
-        if (!$this->validateProperties()) {
-            exit (self::OCF_ERR_CONFIGURED);
-        }
         if (!$this->validateRequirements()) {
             exit (self::OCF_ERR_INSTALLED);
+        }
+        if (!$this->validateProperties()) {
+            exit (self::OCF_ERR_CONFIGURED);
         }
         $this->initSentry();
 
