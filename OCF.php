@@ -17,12 +17,12 @@ abstract class OCF
     const OCF_ERR_GENERIC = 1;
 
     /**
-     * wrong console arguments
+     * wrong console arguments. used.
      */
     const OCF_ERR_ARGS = 2;
 
     /**
-     * action not implemented
+     * action not implemented. used.
      */
     const OCF_ERR_UNIMPLEMENTED = 3;
 
@@ -32,12 +32,12 @@ abstract class OCF
     const OCF_ERR_PERM = 4;
 
     /**
-     * required component isn't installed
+     * required component isn't installed. used.
      */
     const OCF_ERR_INSTALLED = 5;
 
     /**
-     * wrong resource configuration
+     * wrong resource configuration. used.
      */
     const OCF_ERR_CONFIGURED = 6;
 
@@ -90,6 +90,11 @@ abstract class OCF
         return true;
     }
 
+    public function validateRequirements()
+    {
+        return true;
+    }
+
     public function initSentry()
     {
         if ($this->sentryDSN) {
@@ -110,6 +115,9 @@ abstract class OCF
         $this->initProperties();
         if (!$this->validateProperties()) {
             exit (self::OCF_ERR_CONFIGURED);
+        }
+        if (!$this->validateRequirements()) {
+            exit (self::OCF_ERR_INSTALLED);
         }
         $this->initSentry();
 
