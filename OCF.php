@@ -124,13 +124,15 @@ abstract class OCF
     public function run($method)
     {
         $this->initProperties();
-        if (!$this->validateRequirements()) {
-            exit (self::OCF_ERR_INSTALLED);
+        if ($method != 'meta-data') {
+            if (!$this->validateRequirements()) {
+                exit (self::OCF_ERR_INSTALLED);
+            }
+            if (!$this->validateProperties()) {
+                exit (self::OCF_ERR_CONFIGURED);
+            }
+            $this->initSentry();
         }
-        if (!$this->validateProperties()) {
-            exit (self::OCF_ERR_CONFIGURED);
-        }
-        $this->initSentry();
 
         $method = 'action-' . $method;
         $method = $this->convertToCamelCase($method);
