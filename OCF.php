@@ -70,8 +70,8 @@ abstract class OCF
         $reflection = new \ReflectionClass($this);
         $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
         foreach ($properties as $property) {
-            if (isset($_ENV['OCF_RESKEY_' . $property->name])) {
-                $this->{$property->name} = $_ENV['OCF_RESKEY_' . $property->name];
+            if (getenv('OCF_RESKEY_' . $property->name)) {
+                $this->{$property->name} = getenv('OCF_RESKEY_' . $property->name);
             }
         }
     }
@@ -97,7 +97,7 @@ abstract class OCF
     public function validateRequirements()
     {
         foreach ($this->requiredUtilities as $command) {
-            exec($command, $output, $exitCode);
+            exec($command . ' >/dev/null 2>&1', $output, $exitCode);
             if ($exitCode == 127) {
                 return false;
             }
