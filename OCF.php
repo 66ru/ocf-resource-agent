@@ -63,7 +63,7 @@ abstract class OCF
     /**
      * @var string[] Required console utilities
      */
-    protected $requiredUtilities = [];
+    protected $requiredUtilities = array();
 
     public function initProperties()
     {
@@ -365,7 +365,7 @@ abstract class OCF
         if ($exitCode) {
             $executable = explode(' ', $command, 2);
             $executable = reset($executable);
-            $this->ravenClient->extra_context(['command' => $command, 'output' => $output, 'exitCode' => $exitCode]);
+            $this->ravenClient->extra_context(array('command' => $command, 'output' => $output, 'exitCode' => $exitCode));
             $this->ravenClient->captureException(new \Exception("$executable executed with error"));
             return $exitCode;
         }
