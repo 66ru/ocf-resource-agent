@@ -81,14 +81,6 @@ abstract class OCF
      */
     public function validateProperties()
     {
-        // validating sentry dsn
-        try {
-            new \Raven_Client($this->sentryDSN);
-        } catch (\InvalidArgumentException $e) {
-            echo "sentryDSN is invalid\n";
-            return false;
-        }
-
         return true;
     }
 
@@ -98,9 +90,8 @@ abstract class OCF
     public function validateRequirements()
     {
         foreach ($this->requiredUtilities as $command) {
-            exec($command . ' >/dev/null 2>&1', $output, $exitCode);
+            $exitCode = $this->execWithLogging($command);
             if ($exitCode == 127) {
-                echo "$command is missing\n";
                 return false;
             }
         }
@@ -111,12 +102,15 @@ abstract class OCF
     public function initSentry()
     {
         if ($this->sentryDSN) {
-            $this->ravenClient = new \Raven_Client($this->sentryDSN);
-
-            $error_handler = new \Raven_ErrorHandler($this->ravenClient);
-            $error_handler->registerExceptionHandler();
-            $error_handler->registerErrorHandler();
-            $error_handler->registerShutdownFunction();
+            try {
+                $this->ravenClient = new \Raven_Client($this->sentryDSN);
+                $error_handler = new \Raven_ErrorHandler($this->ravenClient);
+                $error_handler->registerExceptionHandler();
+                $error_handler->registerErrorHandler();
+                $error_handler->registerShutdownFunction();
+            } catch (\InvalidArgumentException $e) {
+                echo "sentryDSN is invalid\n";
+            }
         }
     }
 
@@ -126,6 +120,7 @@ abstract class OCF
     public function run($method)
     {
         $this->initProperties();
+        $this->initSentry();
         if ($method != 'meta-data') {
             if (!$this->validateRequirements()) {
                 exit (self::OCF_ERR_INSTALLED);
@@ -133,7 +128,6 @@ abstract class OCF
             if (!$this->validateProperties()) {
                 exit (self::OCF_ERR_CONFIGURED);
             }
-            $this->initSentry();
         }
 
         $method = 'action-' . $method;
@@ -361,13 +355,14 @@ abstract class OCF
      */
     public function execWithLogging($command)
     {
-        exec($command . ' >/dev/null 2>&1', $output, $exitCode);
+        $shutUp = ' >/dev/null 2>&1';
+        exec($command . $shutUp, $output, $exitCode);
         if ($exitCode) {
             $executable = explode(' ', $command, 2);
             $executable = reset($executable);
             if ($this->ravenClient) {
                 $this->ravenClient->extra_context(
-                    array('command' => $command, 'output' => $output, 'exitCode' => $exitCode)
+                    array('command' => $command . $shutUp, 'output' => $output, 'exitCode' => $exitCode)
                 );
                 $this->ravenClient->captureException(new \Exception("$executable executed with error"));
             }
