@@ -85,6 +85,7 @@ abstract class OCF
         try {
             new \Raven_Client($this->sentryDSN);
         } catch (\InvalidArgumentException $e) {
+            echo "sentryDSN is invalid\n";
             return false;
         }
 
@@ -99,6 +100,7 @@ abstract class OCF
         foreach ($this->requiredUtilities as $command) {
             exec($command . ' >/dev/null 2>&1', $output, $exitCode);
             if ($exitCode == 127) {
+                echo "$command is missing\n";
                 return false;
             }
         }
