@@ -337,7 +337,6 @@ abstract class OCF
     {
         $command = "attrd_updater -n " . escapeshellarg($name) . ' -v ' . escapeshellarg($value);
         $exitCode = $this->execWithLogging($command);
-        exec($command, $output, $exitCode);
 
         return $exitCode ? self::OCF_ERR_GENERIC : self::OCF_SUCCESS;
     }
@@ -350,7 +349,6 @@ abstract class OCF
     {
         $command = "attrd_updater -D -n " . escapeshellarg($name);
         $exitCode = $this->execWithLogging($command);
-        exec($command, $output, $exitCode);
 
         return $exitCode ? self::OCF_ERR_GENERIC : self::OCF_SUCCESS;
     }
@@ -361,12 +359,16 @@ abstract class OCF
      */
     public function execWithLogging($command)
     {
-        exec($command, $output, $exitCode);
+        exec($command . ' >/dev/null 2>&1', $output, $exitCode);
         if ($exitCode) {
             $executable = explode(' ', $command, 2);
             $executable = reset($executable);
-            $this->ravenClient->extra_context(array('command' => $command, 'output' => $output, 'exitCode' => $exitCode));
-            $this->ravenClient->captureException(new \Exception("$executable executed with error"));
+            if ($this->ravenClient) {
+                $this->ravenClient->extra_context(
+                    array('command' => $command, 'output' => $output, 'exitCode' => $exitCode)
+                );
+                $this->ravenClient->captureException(new \Exception("$executable executed with error"));
+            }
             return $exitCode;
         }
 
