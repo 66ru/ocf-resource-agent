@@ -358,7 +358,7 @@ abstract class OCF
     {
         $shutUp = ' >/dev/null 2>&1';
         exec($command . $shutUp, $output, $exitCode);
-        if (!array_search($exitCode, $expectedExitCodes)) {
+        if (array_search($exitCode, $expectedExitCodes) === false) {
             $executable = explode(' ', $command, 2);
             $executable = reset($executable);
             if ($this->ravenClient) {
