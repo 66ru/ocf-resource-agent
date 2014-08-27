@@ -351,13 +351,14 @@ abstract class OCF
 
     /**
      * @param string $command
+     * @param int[] $expectedExitCodes
      * @return int
      */
-    public function execWithLogging($command)
+    public function execWithLogging($command, $expectedExitCodes = array(0))
     {
         $shutUp = ' >/dev/null 2>&1';
         exec($command . $shutUp, $output, $exitCode);
-        if ($exitCode) {
+        if (!array_search($exitCode, $expectedExitCodes)) {
             $executable = explode(' ', $command, 2);
             $executable = reset($executable);
             if ($this->ravenClient) {
